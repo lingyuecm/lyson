@@ -23,6 +23,8 @@ func TransformToString(value any) string {
 		}
 	case *JsonObject:
 		return value.(*JsonObject).ToString()
+	case *JsonArray:
+		return value.(*JsonArray).ToString()
 	}
 	panic("invalid Data Type to Transform to String")
 }
