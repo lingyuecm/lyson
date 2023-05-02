@@ -1,4 +1,4 @@
-package model
+package lyson
 
 import (
 	"errors"
@@ -10,13 +10,7 @@ import (
 func verifyDataType(value any) error {
 	var err error = nil
 	switch value.(type) {
-	case int:
-	case int64:
-	case float64:
-	case bool:
-	case string:
-	case *JsonObject:
-	case *JsonArray:
+	case int, int64, float64, bool, string, *JsonObject, *JsonArray:
 		break
 	default:
 		err = errors.New("invalid Data Type")
@@ -94,8 +88,7 @@ func getBoolean(value any) (bool, error) {
 	switch value.(type) {
 	case bool:
 		result = value.(bool)
-	case int:
-	case int64:
+	case int, int64:
 		if 0 == value {
 			result = false
 		} else {
@@ -121,8 +114,7 @@ func getString(value any) (string, error) {
 	var result string
 	var err error = nil
 	switch value.(type) {
-	case int:
-	case int64:
+	case int, int64:
 		result = strconv.FormatInt(value.(int64), 10)
 	case float64:
 		result = fmt.Sprintf("%f", value.(float64))

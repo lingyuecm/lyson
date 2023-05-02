@@ -1,4 +1,4 @@
-package model
+package lyson
 
 // JsonArray Is the Implementation of JSONArray
 type JsonArray struct {
@@ -58,4 +58,15 @@ func (arr *JsonArray) GetJsonObject(index int) (*JsonObject, error) {
 func (arr *JsonArray) GetJsonArray(index int) (*JsonArray, error) {
 	value := arr.elements[index]
 	return getJsonArray(value)
+}
+
+func (arr *JsonArray) ToString() string {
+	if 0 == len(arr.elements) {
+		return "[]"
+	}
+	result := ""
+	for _, e := range arr.elements {
+		result = result + "," + TransformToString(e)
+	}
+	return "[" + result[1:] + "]"
 }

@@ -1,4 +1,4 @@
-package model
+package lyson
 
 // JsonObject Is the Implementation of JSONObject
 type JsonObject struct {
@@ -87,4 +87,16 @@ func (obj *JsonObject) GetJsonArray(key string) (*JsonArray, bool, error) {
 	}
 	result, err := getJsonArray(value)
 	return result, ok, err
+}
+
+func (obj *JsonObject) ToString() string {
+	if 0 == len(obj.entries) {
+		return "{}"
+	}
+	result := ""
+	for key := range obj.entries {
+		result = result + ",\"" + key + "\":" +
+			TransformToString(obj.entries[key])
+	}
+	return "{" + result[1:] + "}"
 }
