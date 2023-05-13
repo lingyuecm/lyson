@@ -1,5 +1,9 @@
 package lyson
 
+import (
+	"bytes"
+)
+
 // JsonObject Is the Implementation of JSONObject
 type JsonObject struct {
 	// entries Are the Entries Wrapped in the JSON Object
@@ -93,10 +97,16 @@ func (obj *JsonObject) ToString() string {
 	if 0 == len(obj.entries) {
 		return "{}"
 	}
-	result := ""
+	var buf bytes.Buffer
+	var valueText string
 	for key := range obj.entries {
-		result = result + ",\"" + key + "\":" +
-			TransformToString(obj.entries[key])
+		buf.WriteString(",\"")
+		buf.WriteString(key)
+		buf.WriteString("\":")
+
+		valueText = TransformToString(obj.entries[key])
+		buf.WriteString(valueText)
 	}
+	result := buf.String()
 	return "{" + result[1:] + "}"
 }
