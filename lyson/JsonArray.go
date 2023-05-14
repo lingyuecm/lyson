@@ -1,5 +1,7 @@
 package lyson
 
+import "bytes"
+
 // JsonArray Is the Implementation of JSONArray
 type JsonArray struct {
 	// elements Are the Elements Wrapped in the JSON Array
@@ -64,9 +66,13 @@ func (arr *JsonArray) ToString() string {
 	if 0 == len(arr.elements) {
 		return "[]"
 	}
-	result := ""
+	var buf bytes.Buffer
+	var valueText string
 	for _, e := range arr.elements {
-		result = result + "," + TransformToString(e)
+		buf.WriteString(",")
+		valueText = TransformToString(e)
+		buf.WriteString(valueText)
 	}
+	result := buf.String()
 	return "[" + result[1:] + "]"
 }
