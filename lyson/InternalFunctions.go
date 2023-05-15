@@ -321,7 +321,121 @@ func parseObject(jsonText string, startIndex int, endIndex map[string]int) *Json
 }
 
 func parseArray(jsonText string, startIndex int, endIndex map[string]int) *JsonArray {
-	return NewArray()
+	length := len(jsonText)
+
+	bStack := NewStack[byte]()
+
+	jaStack := NewStack[*JsonArray]()
+	result := NewArray()
+	jaStack.Push(result)
+
+	var currentByte byte
+	var peekByte byte
+
+	tokenBytes := make([]byte, 0, 10)
+	unicodeBytes := make([]byte, 0, 4)
+
+	for m := startIndex; m < length; m++ {
+		currentByte = jsonText[m]
+		switch currentByte {
+		case constant.StartArray:
+			if 0 == bStack.Size() {
+				bStack.Push(currentByte)
+				break
+			}
+			peekByte = bStack.Peek()
+			if constant.Quote == peekByte {
+				tokenBytes = append(tokenBytes, currentByte)
+			} else if constant.StartArray == peekByte {
+				bStack.Push(currentByte)
+
+				element := NewArray()
+				_ = jaStack.Peek().AddElement(element)
+				jaStack.Push(element)
+			}
+		case constant.BackSlash:
+			peekByte = bStack.Peek()
+			if constant.Quote == peekByte {
+				bStack.Push(currentByte)
+			} else if constant.BackSlash == peekByte {
+				tokenBytes = append(tokenBytes, currentByte)
+			}
+		case constant.Quote:
+			peekByte = bStack.Peek()
+			if constant.BackSlash == peekByte {
+				_ = bStack.Pop()
+				tokenBytes = append(tokenBytes, currentByte)
+			} else if constant.StartArray == peekByte {
+				bStack.Push(currentByte)
+				tokenBytes = append(make([]byte, 0, 10), currentByte)
+			} else if constant.Quote == peekByte {
+				_ = bStack.Pop()
+				tokenBytes = append(tokenBytes, currentByte)
+			}
+		case constant.Comma:
+			peekByte = bStack.Peek()
+			if constant.Quote == peekByte {
+				tokenBytes = append(tokenBytes, currentByte)
+			} else if constant.StartArray == peekByte {
+				if len(tokenBytes) > 0 {
+					_ = jaStack.Peek().AddElement(translateValue(strings.TrimSpace(string(tokenBytes))))
+				}
+				tokenBytes = make([]byte, 0, 10)
+			}
+		case constant.LetterU:
+			peekByte = bStack.Peek()
+			if constant.BackSlash == peekByte {
+				bStack.Push(currentByte)
+				unicodeBytes = make([]byte, 0, 4)
+			} else if constant.Quote == peekByte || constant.StartArray == peekByte {
+				tokenBytes = append(tokenBytes, currentByte)
+			}
+		case constant.EndArray:
+			peekByte = bStack.Peek()
+			if constant.Quote == peekByte {
+				tokenBytes = append(tokenBytes, currentByte)
+			} else if constant.StartArray == peekByte {
+				_ = bStack.Pop()
+				result = jaStack.Pop()
+				lastValue := strings.TrimSpace(string(tokenBytes))
+				if len(lastValue) > 0 {
+					_ = result.AddElement(translateValue(lastValue))
+					tokenBytes = make([]byte, 0, 10)
+				}
+				if 0 == bStack.Size() {
+					return result
+				}
+			}
+		case constant.StartObject:
+			peekByte = bStack.Peek()
+			if constant.Quote == peekByte {
+				tokenBytes = append(tokenBytes, currentByte)
+			} else if constant.StartArray == peekByte {
+				_ = jaStack.Peek().AddElement(parseObject(jsonText, m, endIndex))
+				m = endIndex[endIndexKey]
+				tokenBytes = make([]byte, 0, 10)
+			}
+		default:
+			peekByte = bStack.Peek()
+			if constant.BackSlash == peekByte {
+				_ = bStack.Pop()
+				tokenBytes = append(tokenBytes, findEscape(currentByte))
+			} else if constant.Quote == peekByte || constant.StartArray == peekByte {
+				tokenBytes = append(tokenBytes, currentByte)
+			} else if constant.LetterU == peekByte {
+				unicodeBytes = append(unicodeBytes, currentByte)
+				if 4 == len(unicodeBytes) {
+					code, _ := strconv.ParseInt(string(unicodeBytes), 16, 32)
+					ba := []byte(string([]rune{rune(code)}))
+					tokenBytes = append(tokenBytes, ba...)
+
+					_ = bStack.Pop()
+					_ = bStack.Pop()
+				}
+			}
+		}
+	}
+	return result
 }
 
 func findEscape(b byte) byte {
