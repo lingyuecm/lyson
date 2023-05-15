@@ -32,11 +32,10 @@ func (s *Stack[T]) Push(element T) {
 }
 
 func (s *Stack[T]) Pop() T {
-	node := s.peek
-	if nil == node.previousNode {
-		// An Empty Stack
+	if 0 == s.Size() {
 		panic("Empty Stack")
 	}
+	node := s.peek
 	s.peek = node.previousNode
 
 	node.previousNode = nil
