@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lingyuecm/aldyt/impl"
-	"lyson/constant"
+	"github.com/lingyuecm/lyson/constant"
 	"regexp"
 	"strconv"
 	"strings"
