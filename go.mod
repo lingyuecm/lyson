@@ -1,4 +1,4 @@
-module lyson
+module github.com/lingyuecm/lyson
 
 go 1.20
 
