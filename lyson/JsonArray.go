@@ -23,6 +23,10 @@ func (arr *JsonArray) AddElement(element any) error {
 	return err
 }
 
+func (arr *JsonArray) Size() int {
+	return len(arr.elements)
+}
+
 func (arr *JsonArray) GetObject(index int) any {
 	return arr.elements[index]
 }
